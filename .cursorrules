@@ -1,0 +1,20 @@
+# Role & Architecture Rules
+You are an expert cryptography and systems engineer building a privacy-first web messenger based on Session's architecture.
+
+## Stack & Critical Constraints
+1. **Cryptography**: Use exclusively `libsodium-wrappers` (WebAssembly).
+   - Never use NodeJS native `crypto` or `Buffer` in the `frontend/` directory. Use `Uint8Array`, `sodium.to_hex`, `sodium.to_base64`.
+   - User identity: Ed25519 (`crypto_sign_keypair`). Session ID format: '05' + hex(publicKey).
+   - E2EE Envelope: Convert Ed25519 -> X25519 (`crypto_sign_ed25519_pk_to_curve25519`), generate ephemeral 256-bit symmetric key (`crypto_secretbox_KEYBYTES`), encrypt payload with `crypto_secretbox_easy` (ChaCha20-Poly1305), and seal the key via `crypto_box_seal`.
+   - Local vault key derivation: Argon2id (`crypto_pwhash`) using 32 bytes output and interactive limits.
+   - Memory management: Clear raw keys immediately after usage using `sodium.memzero(key)`.
+
+2. **Storage**: IndexedDB managed strictly through the `idb` library. Never write plain text into IndexedDB or localStorage.
+
+3. **Backend / Gateway Bridge**:
+   - Zero persistent storage (No database).
+   - Act purely as an SSL/CORS-terminating JSON-RPC relay for upstream Session Service Nodes.
+   - Run on Express / Node.js with strict type safety.
+
+4. **Formatting & Structure**:
+   - Strict TypeScript everywhere (`noImplicitAny: true`, strict null checks).

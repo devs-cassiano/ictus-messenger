@@ -1,0 +1,113 @@
+# =============================================================================
+# Ictus Messenger — .gitignore (monorepo frontend / backend)
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Dependências e gerenciadores de pacote
+# -----------------------------------------------------------------------------
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+.pnpm-store/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# -----------------------------------------------------------------------------
+# Artefatos de build e compilação
+# -----------------------------------------------------------------------------
+dist/
+build/
+out/
+frontend/dist/
+backend/dist/
+*.tsbuildinfo
+frontend/node_modules/.tmp/
+.turbo/
+.cache/
+.vite/
+frontend/.vite/
+*.map
+
+# -----------------------------------------------------------------------------
+# Segredos, chaves e credenciais (crítico)
+# -----------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+!**/.env.example
+
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
+*.sessionkey
+*.seed
+
+# Backups de seed / frase de recuperação gerados no onboarding
+*.txt
+!LICENSE.txt
+!**/README.txt
+
+# -----------------------------------------------------------------------------
+# Logs e execução (PM2, processos)
+# -----------------------------------------------------------------------------
+logs/
+*.log
+pm2/
+.pm2/
+pids/
+*.pid
+*.seed.lock
+
+# -----------------------------------------------------------------------------
+# Arquivos de sistema e editores
+# -----------------------------------------------------------------------------
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+desktop.ini
+
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*.sw?
+*~
+
+# -----------------------------------------------------------------------------
+# Proxy local e certificados Caddy
+# -----------------------------------------------------------------------------
+.caddy/
+Caddyfile.local
+*.local.caddy
+
+# -----------------------------------------------------------------------------
+# Testes e cobertura
+# -----------------------------------------------------------------------------
+coverage/
+.nyc_output/
+*.lcov
+.jest/
+playwright-report/
+test-results/
+
+# -----------------------------------------------------------------------------
+# Diversos / temporários
+# -----------------------------------------------------------------------------
+*.tmp
+*.temp
+*.bak
+*.orig
+.parcel-cache/
+.eslintcache
+.stylelintcache
