@@ -1,9 +1,14 @@
 /**
  * POST /api/relay handler helpers — explicit targetUrl forwarding.
  * Kept in server.ts for the request path; TLS agent lives in session/client.
+ *
+ * Production also serves the Vite SPA from ../../frontend/dist (monorepo-safe via
+ * path.resolve(__dirname, ...)), so `node backend/dist/server.js` works from repo root.
  */
 
-import 'dotenv/config';
+import dotenv from 'dotenv';
+import path from 'path';
+import fs from 'fs';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import {
@@ -18,7 +23,18 @@ import {
 } from './security/validateTargetUrl';
 import { logUnexpectedRelayError } from './security/quietTransport';
 
+/** Always load backend/.env regardless of process.cwd() (root vs backend/). */
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+
 const PORT = Number(process.env.PORT) || 3001;
+
+/**
+ * Absolute path to the Vite production build.
+ * __dirname = <repo>/backend/dist → ../../frontend/dist
+ */
+const FRONTEND_DIST = path.resolve(__dirname, '../../frontend/dist');
+const FRONTEND_INDEX = path.join(FRONTEND_DIST, 'index.html');
+
 
 /**
  * External Session nodes are ON by default.
@@ -88,10 +104,6 @@ app.options('/{*splat}', cors({ origin: resolveCorsOrigins(), credentials: true 
 
 /** Forensic / browser hardening headers on every response. */
 app.use((_req: Request, res: Response, next: NextFunction): void => {
-  res.setHeader(
-    'Content-Security-Policy',
-    "default-src 'none'; frame-ancestors 'none'; form-action 'none'; base-uri 'none'",
-  );
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
@@ -102,6 +114,21 @@ app.use((_req: Request, res: Response, next: NextFunction): void => {
   );
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Referrer-Policy', 'no-referrer');
+  next();
+});
+
+/** Strict CSP only for API JSON responses — SPA relies on index.html meta CSP. */
+app.use((req: Request, res: Response, next: NextFunction): void => {
+  if (
+    req.path.startsWith('/api') ||
+    req.path.startsWith('/storage_rpc') ||
+    req.path === '/health'
+  ) {
+    res.setHeader(
+      'Content-Security-Policy',
+      "default-src 'none'; frame-ancestors 'none'; form-action 'none'; base-uri 'none'",
+    );
+  }
   next();
 });
 
@@ -506,8 +533,58 @@ app.get('/health', (_req: Request, res: Response): void => {
   res.json({
     ok: true,
     mode: USE_EXTERNAL_NODES ? 'external' : 'disabled',
+    frontendDist: FRONTEND_DIST,
+    frontendReady: fs.existsSync(FRONTEND_INDEX),
   });
 });
+
+/**
+ * Serve the Vite SPA from the monorepo frontend build.
+ * Works when started from repo root (`npm start`) or with cwd=backend (PM2).
+ */
+if (fs.existsSync(FRONTEND_DIST)) {
+  app.use(
+    express.static(FRONTEND_DIST, {
+      index: false,
+      fallthrough: true,
+      // Hashed assets can be cached; HTML stays no-store via global header.
+      setHeaders(res, filePath) {
+        if (filePath.endsWith('.html')) {
+          res.setHeader(
+            'Cache-Control',
+            'no-store, no-cache, must-revalidate, private',
+          );
+        } else if (/\.(?:js|css|woff2?|svg|png|jpg|webp)$/i.test(filePath)) {
+          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        }
+      },
+    }),
+  );
+
+  app.get('/{*splat}', (req: Request, res: Response, next: NextFunction): void => {
+    if (
+      req.path.startsWith('/api') ||
+      req.path.startsWith('/storage_rpc') ||
+      req.path === '/health'
+    ) {
+      next();
+      return;
+    }
+    if (!fs.existsSync(FRONTEND_INDEX)) {
+      res.status(503).json({
+        error: 'Frontend build missing',
+        hint: 'Run npm run build from the monorepo root',
+        expected: FRONTEND_INDEX,
+      });
+      return;
+    }
+    res.sendFile(FRONTEND_INDEX);
+  });
+} else {
+  console.warn(
+    `${LOG} Frontend dist não encontrado em ${FRONTEND_DIST} — apenas API ativa`,
+  );
+}
 
 app.use(
   (
@@ -525,6 +602,9 @@ app.use(
 );
 
 app.listen(PORT, () => {
+  console.warn(
+    `${LOG} Listening on :${PORT} (frontend: ${FRONTEND_DIST})`,
+  );
   if (USE_EXTERNAL_NODES) {
     void refreshServiceNodes().catch((err: unknown) => {
       console.warn(
