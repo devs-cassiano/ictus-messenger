@@ -15,7 +15,11 @@
     "start:prod": "pm2 start dist/server.js --name ictus-messenger --cwd backend --output /dev/null --error /dev/null",
     "stop:prod": "pm2 stop ictus-messenger",
     "restart:prod": "pm2 restart ictus-messenger",
-    "deploy": "git pull && npm run build && pm2 restart ictus-messenger"
+    "deploy": "git pull && npm run build && pm2 restart ictus-messenger",
+    "docker:build": "docker build -t ictus-messenger .",
+    "docker:run": "docker run -d --name ictus-messenger -p 127.0.0.1:3001:3001 --restart unless-stopped ictus-messenger",
+    "docker:stop": "docker stop ictus-messenger && docker rm ictus-messenger",
+    "docker:logs": "docker logs -f ictus-messenger"
   },
   "engines": {
     "node": ">=20"

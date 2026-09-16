@@ -31,6 +31,10 @@ const PORT = Number(process.env.PORT) || 3001;
 /**
  * Absolute path to the Vite production build.
  * __dirname = <repo>/backend/dist → ../../frontend/dist
+ *
+ * Resolves the same way on:
+ *   - host (`npm start` / PM2 from monorepo root or cwd=backend)
+ *   - Docker (`WORKDIR /app`, CMD node backend/dist/server.js)
  */
 const FRONTEND_DIST = path.resolve(__dirname, '../../frontend/dist');
 const FRONTEND_INDEX = path.join(FRONTEND_DIST, 'index.html');
