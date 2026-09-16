@@ -90,7 +90,8 @@
     "removeAdmin": "− Admin",
     "remove": "Remove",
     "invite": "Invite",
-    "noHash": "SNode did not return a store hash"
+    "noHash": "SNode did not return a store hash",
+    "scrollToLatest": "Jump to latest messages"
   },
   "sidebar": {
     "conversations": "Conversations",

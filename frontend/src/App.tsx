@@ -21,6 +21,7 @@ import { ShowRecoveryPhraseModal } from './components/ShowRecoveryPhraseModal';
 import {
   IconCamera,
   IconCheck,
+  IconChevronDown,
   IconChevronLeft,
   IconClock,
   IconCopy,
@@ -84,6 +85,11 @@ import {
 } from './crypto/identity';
 import { sanitizeSessionId } from './utils/validators';
 import { sanitizePlainMessageText } from './utils/sanitizeMessage';
+import {
+  clearFaviconNotifications,
+  setDocumentUnreadTitle,
+  setFaviconBadge,
+} from './utils/favicon';
 import {
   downloadVaultFile,
   openConversationVault,
@@ -316,6 +322,13 @@ export default function App() {
   const activePeerRef = useRef<string | null>(null);
   const syncingRef = useRef(false);
 
+  const scrollContainerRef = useRef<HTMLElement | null>(null);
+  const bottomAnchorRef = useRef<HTMLDivElement | null>(null);
+  const prevMessagesLengthRef = useRef(0);
+  const isAtBottomRef = useRef(true);
+  const [isAtBottom, setIsAtBottom] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
+
   function vaultImportErrorMessage(err: unknown): string {
     if (err instanceof VaultImportError) {
       switch (err.code) {
@@ -357,6 +370,90 @@ export default function App() {
   useEffect(() => {
     activePeerRef.current = activePeer;
   }, [activePeer]);
+
+  useEffect(() => {
+    isAtBottomRef.current = isAtBottom;
+  }, [isAtBottom]);
+
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
+    bottomAnchorRef.current?.scrollIntoView({ behavior, block: 'end' });
+  }, []);
+
+  const handleHistoryScroll = useCallback(() => {
+    const container = scrollContainerRef.current;
+    if (!container) {
+      return;
+    }
+    const threshold = 120;
+    const isClose =
+      container.scrollHeight - container.scrollTop - container.clientHeight <=
+      threshold;
+    if (isClose) {
+      setIsAtBottom(true);
+      setUnreadCount(0);
+    } else {
+      setIsAtBottom(false);
+    }
+  }, []);
+
+  // Contact switch / history load: jump to latest instantly.
+  useEffect(() => {
+    setUnreadCount(0);
+    setIsAtBottom(true);
+    isAtBottomRef.current = true;
+    prevMessagesLengthRef.current = 0;
+    const id = window.requestAnimationFrame(() => {
+      scrollToBottom('auto');
+    });
+    return () => {
+      window.cancelAnimationFrame(id);
+    };
+  }, [activePeer, scrollToBottom]);
+
+  // Sticky scroll + unread badge when the message list grows.
+  useEffect(() => {
+    const prevLen = prevMessagesLengthRef.current;
+    const nextLen = messages.length;
+
+    if (nextLen === 0) {
+      prevMessagesLengthRef.current = 0;
+      return;
+    }
+
+    // First paint for this conversation (or after peer switch reset).
+    if (prevLen === 0) {
+      prevMessagesLengthRef.current = nextLen;
+      const id = window.requestAnimationFrame(() => {
+        scrollToBottom('auto');
+        setIsAtBottom(true);
+        setUnreadCount(0);
+      });
+      return () => {
+        window.cancelAnimationFrame(id);
+      };
+    }
+
+    if (nextLen <= prevLen) {
+      prevMessagesLengthRef.current = nextLen;
+      return;
+    }
+
+    const added = messages.slice(prevLen);
+    const hasOwn = added.some((m) => m.senderSessionId === sessionId);
+    const delta = nextLen - prevLen;
+
+    if (hasOwn) {
+      scrollToBottom('smooth');
+      setIsAtBottom(true);
+      setUnreadCount(0);
+    } else if (isAtBottomRef.current) {
+      scrollToBottom('smooth');
+    } else {
+      setUnreadCount((prev) => prev + delta);
+    }
+
+    prevMessagesLengthRef.current = nextLen;
+  }, [messages, sessionId, scrollToBottom]);
 
   const refreshConversations = useCallback(async (key: Uint8Array) => {
     const list = await getConversationList(key);
@@ -438,11 +535,36 @@ export default function App() {
     await refreshConversations(result.vaultKey);
   }
 
+  function totalUnread(counts: Record<string, number>): number {
+    let sum = 0;
+    for (const value of Object.values(counts)) {
+      sum += value;
+    }
+    return sum;
+  }
+
+  function syncBackgroundNotifications(counts: Record<string, number>): void {
+    if (typeof document === 'undefined' || !document.hidden) {
+      return;
+    }
+    const total = totalUnread(counts);
+    if (total > 0) {
+      setFaviconBadge(true);
+      setDocumentUnreadTitle(total);
+    } else {
+      clearFaviconNotifications();
+    }
+  }
+
   function bumpUnread(peerId: string): void {
-    setUnreadCounts((prev) => ({
-      ...prev,
-      [peerId]: (prev[peerId] ?? 0) + 1,
-    }));
+    setUnreadCounts((prev) => {
+      const next = {
+        ...prev,
+        [peerId]: (prev[peerId] ?? 0) + 1,
+      };
+      syncBackgroundNotifications(next);
+      return next;
+    });
   }
 
   function clearUnread(peerId: string): void {
@@ -452,6 +574,7 @@ export default function App() {
       }
       const next = { ...prev };
       delete next[peerId];
+      syncBackgroundNotifications(next);
       return next;
     });
   }
@@ -748,6 +871,7 @@ export default function App() {
 
     const onVisibility = (): void => {
       if (document.visibilityState === 'visible') {
+        clearFaviconNotifications();
         tick();
         start();
       } else {
@@ -1335,6 +1459,7 @@ export default function App() {
     setSessionId('');
     setConversations([]);
     setUnreadCounts({});
+    clearFaviconNotifications();
     setMessages([]);
     setActivePeer(null);
     setActiveGroup(null);
@@ -1412,6 +1537,7 @@ export default function App() {
       setSessionId('');
       setConversations([]);
       setUnreadCounts({});
+      clearFaviconNotifications();
       setMessages([]);
       setActivePeer(null);
       setActiveGroup(null);
@@ -2195,7 +2321,12 @@ export default function App() {
               </section>
             )}
 
-            <section className="history" aria-live="polite">
+            <section
+              ref={scrollContainerRef}
+              className="history"
+              aria-live="polite"
+              onScroll={handleHistoryScroll}
+            >
               {messages.length > 0 && (
                 <ul>
                   {messages.map((msg) => {
@@ -2294,6 +2425,7 @@ export default function App() {
                             )}
                           </div>
                         </div>
+
                         {protectedMsg && (
                           <span className="view-badge">
                             {msg.viewPolicy === 'VIEW_ONCE'
@@ -2371,6 +2503,31 @@ export default function App() {
                     );
                   })}
                 </ul>
+              )}
+              <div
+                ref={bottomAnchorRef}
+                className="history-bottom-anchor"
+                aria-hidden="true"
+              />
+              {!isAtBottom && (
+                <button
+                  type="button"
+                  className="scroll-to-bottom-btn"
+                  title={t('chat.scrollToLatest')}
+                  aria-label={t('chat.scrollToLatest')}
+                  onClick={() => {
+                    scrollToBottom('smooth');
+                    setUnreadCount(0);
+                    setIsAtBottom(true);
+                  }}
+                >
+                  <IconChevronDown size="nav" />
+                  {unreadCount > 0 && (
+                    <span className="scroll-to-bottom-badge">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
+                </button>
               )}
             </section>
 

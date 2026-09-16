@@ -90,7 +90,8 @@
     "removeAdmin": "− Admin",
     "remove": "Quitar",
     "invite": "Invitar",
-    "noHash": "El SNode no devolvió hash de almacenamiento"
+    "noHash": "El SNode no devolvió hash de almacenamiento",
+    "scrollToLatest": "Ir a los mensajes más recientes"
   },
   "sidebar": {
     "conversations": "Conversaciones",

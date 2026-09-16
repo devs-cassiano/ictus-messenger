@@ -175,6 +175,14 @@ export function IconChevronLeft(props: UiIconProps) {
   );
 }
 
+export function IconChevronDown(props: UiIconProps) {
+  return (
+    <IconRoot {...props}>
+      <Stroke d="m6 9 6 6 6-6" />
+    </IconRoot>
+  );
+}
+
 /** Collapse sidebar — panel with left chevron. */
 export function IconPanelLeftClose(props: UiIconProps) {
   return (

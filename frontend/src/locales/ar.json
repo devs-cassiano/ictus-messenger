@@ -90,7 +90,8 @@
     "removeAdmin": "− مشرف",
     "remove": "إزالة",
     "invite": "دعوة",
-    "noHash": "لم يُرجع SNode تجزئة التخزين"
+    "noHash": "لم يُرجع SNode تجزئة التخزين",
+    "scrollToLatest": "الانتقال إلى أحدث الرسائل"
   },
   "sidebar": {
     "conversations": "المحادثات",
