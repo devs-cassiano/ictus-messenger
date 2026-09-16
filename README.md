@@ -167,7 +167,7 @@ session-messenger/
 ### Clonar e instalar
 
 ```bash
-git clone https://github.com/<seu-org>/session-messenger.git
+git clone https://github.com/devs-cassiano/ictus-messenger.git
 cd session-messenger
 
 npm install --prefix frontend
