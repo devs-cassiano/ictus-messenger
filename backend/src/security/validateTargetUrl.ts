@@ -1,6 +1,7 @@
 /**
  * SSRF defenses for Gateway Bridge upstream targets.
- * Only HTTPS Session seed/storage RPC endpoints may be reached.
+ * Allows Session seeds / public SNodes (HTTPS + storage_rpc|json_rpc) while
+ * blocking private, loopback, link-local and cloud-metadata destinations.
  */
 
 import { Address4, Address6 } from 'ip-address';
@@ -8,7 +9,23 @@ import { Address4, Address6 } from 'ip-address';
 export const SSRF_BLOCKED_MESSAGE =
   'Destino inválido ou bloqueado por política de segurança';
 
-const ALLOWED_PATH_SUFFIXES = ['/storage_rpc/v1', '/json_rpc'] as const;
+/** Well-known Session / Oxen public DNS suffixes (seeds & infra). */
+const ALLOWED_HOST_SUFFIXES = [
+  '.getsession.org',
+  '.oxen.io',
+  '.oxen.rocks',
+  '.loki',
+] as const;
+
+const ALLOWED_EXACT_HOSTS = new Set([
+  'getsession.org',
+  'seed1.getsession.org',
+  'seed2.getsession.org',
+  'seed3.getsession.org',
+]);
+
+/** Common Session SNode / seed HTTPS ports (plus standard web). */
+const ALLOWED_PORTS = new Set<number>([443, 80, 22020, 22021, 22022, 22023, 22024, 22025]);
 
 function hostnameIsBlockedName(host: string): boolean {
   const h = host.trim().toLowerCase().replace(/\.$/, '');
@@ -18,6 +35,16 @@ function hostnameIsBlockedName(host: string): boolean {
     h.endsWith('.localhost') ||
     h === 'metadata.google.internal' ||
     h === 'metadata'
+  );
+}
+
+function isAllowedSessionHostname(host: string): boolean {
+  const h = host.trim().toLowerCase().replace(/\.$/, '');
+  if (ALLOWED_EXACT_HOSTS.has(h)) {
+    return true;
+  }
+  return ALLOWED_HOST_SUFFIXES.some(
+    (suffix) => h === suffix.slice(1) || h.endsWith(suffix),
   );
 }
 
@@ -39,7 +66,6 @@ function isBlockedIpv4(ip: string): boolean {
   ) {
     return true;
   }
-  // Explicit CGNAT / documentation / reserved extras beyond isPrivate()
   const extraCidrs = [
     '0.0.0.0/8',
     '100.64.0.0/10',
@@ -89,37 +115,74 @@ function isBlockedHost(host: string): boolean {
   if (hostnameIsBlockedName(host)) {
     return true;
   }
+  // Trusted Session DNS names skip IP classification.
+  if (isAllowedSessionHostname(host)) {
+    return false;
+  }
   if (Address4.isValid(host)) {
     return isBlockedIpv4(host);
   }
   if (Address6.isValid(host)) {
     return isBlockedIpv6(host);
   }
-  // Public DNS hostnames (Session seeds) are allowed.
+  // Other public DNS hostnames (SNode CNAMEs, etc.) are allowed.
   return false;
 }
 
 function pathnameAllowed(pathname: string): boolean {
-  const normalized =
-    pathname.length > 1 && pathname.endsWith('/')
-      ? pathname.slice(0, -1)
-      : pathname;
-  return ALLOWED_PATH_SUFFIXES.some(
-    (suffix) => normalized === suffix || normalized.endsWith(suffix),
+  let normalized = pathname.trim();
+  if (normalized.length > 1 && normalized.endsWith('/')) {
+    normalized = normalized.slice(0, -1);
+  }
+  const lower = normalized.toLowerCase();
+  return (
+    lower === '/storage_rpc/v1' ||
+    lower === '/json_rpc' ||
+    lower.endsWith('/storage_rpc/v1') ||
+    lower.endsWith('/json_rpc')
   );
+}
+
+function portAllowed(parsed: URL): boolean {
+  const raw = parsed.port;
+  if (!raw) {
+    // Default https → 443, http → 80
+    return true;
+  }
+  const port = Number(raw);
+  if (!Number.isFinite(port)) {
+    return false;
+  }
+  if (ALLOWED_PORTS.has(port)) {
+    return true;
+  }
+  // Session / Oxen storage nodes commonly use 22020–22099
+  if (port >= 22020 && port <= 22099) {
+    return true;
+  }
+  return false;
 }
 
 /**
  * Returns true when `targetUrl` is a safe Session upstream HTTPS endpoint.
  */
 export function validateTargetUrl(targetUrl: string): boolean {
+  if (typeof targetUrl !== 'string') {
+    return false;
+  }
+  const trimmed = targetUrl.trim();
+  if (!trimmed) {
+    return false;
+  }
+
   let parsed: URL;
   try {
-    parsed = new URL(targetUrl);
+    parsed = new URL(trimmed);
   } catch {
     return false;
   }
 
+  // Session swarm / seeds are HTTPS-only from the browser contract.
   if (parsed.protocol !== 'https:') {
     return false;
   }
@@ -127,6 +190,9 @@ export function validateTargetUrl(targetUrl: string): boolean {
     return false;
   }
   if (!pathnameAllowed(parsed.pathname)) {
+    return false;
+  }
+  if (!portAllowed(parsed)) {
     return false;
   }
   if (isBlockedHost(parsed.hostname)) {

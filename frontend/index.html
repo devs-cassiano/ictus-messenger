@@ -8,7 +8,14 @@
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
-    <meta http-equiv="Content-Security-Policy" content="__ICTUS_CSP__" />
+    <!--
+      CSP via <meta>: não use frame-ancestors aqui (só é válido em cabeçalho HTTP).
+      __ICTUS_CSP__ é substituído pelo plugin Vite em build/dev.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; media-src 'self' blob: mediastream:; connect-src 'self' http: https: data: ws: wss:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'"
+    />
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, private" />
     <meta http-equiv="Pragma" content="no-cache" />
     <title>Ictus Messenger</title>

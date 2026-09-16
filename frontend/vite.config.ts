@@ -2,16 +2,24 @@ import react from '@vitejs/plugin-react'
 import { defineConfig, type Plugin } from 'vite'
 
 /**
- * Production CSP stays strict (no unsafe-inline).
- * Dev must allow Vite's React Refresh preamble (inline <script>).
- * connect-src is same-origin only — blocks accidental browser→SNode HTTPS fetches.
- * Upstream HTTPS lives only as JSON `targetUrl` inside POST /api/relay.
+ * CSP for <meta> and HTTP headers.
+ * - No `frame-ancestors` in meta (invalid there); clickjacking via X-Frame-Options.
+ * - Libsodium WASM needs `wasm-unsafe-eval` (+ `unsafe-eval` for some builds).
+ * - `connect-src` allows same-origin relay and http(s) for tooling; browser still
+ *   sends Session upstream only as JSON `targetUrl` inside POST /api/relay.
  */
-const cspProd =
-  "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' blob: data:; media-src 'self' blob: mediastream:; connect-src 'self'; frame-ancestors 'none'; form-action 'none'; base-uri 'none'; object-src 'none'"
-
-const cspDev =
-  "default-src 'none'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' blob: data:; media-src 'self' blob: mediastream:; connect-src 'self' ws://localhost:5173 wss://localhost:5173 ws://localhost:5174 wss://localhost:5174; worker-src 'self' blob:; frame-ancestors 'none'; form-action 'none'; base-uri 'none'; object-src 'none'"
+const ICTUS_CSP =
+  "default-src 'self'; " +
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval'; " +
+  "style-src 'self' 'unsafe-inline'; " +
+  "font-src 'self' data:; " +
+  "img-src 'self' data: blob:; " +
+  "media-src 'self' blob: mediastream:; " +
+  "connect-src 'self' http: https: data: ws: wss:; " +
+  "worker-src 'self' blob:; " +
+  "object-src 'none'; " +
+  "base-uri 'self'; " +
+  "form-action 'self'"
 
 const sharedHeaders = {
   'X-Frame-Options': 'DENY',
@@ -28,23 +36,19 @@ function htmlCspPlugin(csp: string): Plugin {
     name: 'ictus-html-csp',
     transformIndexHtml(html) {
       return html.replace(
-        /content="__ICTUS_CSP__"/,
-        `content="${csp}"`,
+        /(<meta\s+http-equiv="Content-Security-Policy"\s+content=")([^"]*)(")/i,
+        `$1${csp}$3`,
       )
     },
   }
 }
 
 // https://vite.dev/config/
-export default defineConfig(({ command, mode }) => {
-  const isServe = command === 'serve'
+export default defineConfig(({ mode }) => {
   const isProd = mode === 'production'
-  const csp = isServe ? cspDev : cspProd
 
   return {
-    plugins: [react(), htmlCspPlugin(csp)],
-    // Vite 8 uses Oxc (via Rolldown) instead of esbuild.drop for stripping
-    // console/debugger — equivalent to the former `esbuild: { drop: [...] }`.
+    plugins: [react(), htmlCspPlugin(ICTUS_CSP)],
     build: isProd
       ? {
           rolldownOptions: {
@@ -63,11 +67,9 @@ export default defineConfig(({ command, mode }) => {
       port: 5173,
       headers: {
         ...sharedHeaders,
-        'Content-Security-Policy': csp,
+        'Content-Security-Policy': ICTUS_CSP,
       },
-      // Dev-only reverse proxy → Gateway Bridge. Production static builds are
-      // served behind the app gateway / reverse proxy (this block is ignored
-      // for `vite build` output).
+      // Dev-only reverse proxy → Gateway Bridge.
       proxy: {
         '/api': {
           target: 'http://127.0.0.1:3001',
@@ -84,7 +86,7 @@ export default defineConfig(({ command, mode }) => {
     preview: {
       headers: {
         ...sharedHeaders,
-        'Content-Security-Policy': cspProd,
+        'Content-Security-Policy': ICTUS_CSP,
       },
     },
   }

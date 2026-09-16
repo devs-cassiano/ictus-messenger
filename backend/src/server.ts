@@ -105,7 +105,7 @@ app.use((_req: Request, res: Response, next: NextFunction): void => {
   next();
 });
 
-app.use(express.json({ limit: '2mb' }));
+app.use(express.json({ limit: '2mb', strict: false }));
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -113,6 +113,62 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function asString(value: unknown): string | undefined {
   return typeof value === 'string' && value.length > 0 ? value : undefined;
+}
+
+/**
+ * Normalize /api/relay JSON body from the browser.
+ * Accepts canonical `{ targetUrl, payload, headers? }` and tolerates mild shape drift.
+ */
+function normalizeRelayBody(raw: unknown): {
+  targetUrl?: string;
+  payload?: unknown;
+  headers?: Record<string, unknown>;
+  onionPacket?: unknown;
+  targetNodeIndex?: number;
+} {
+  let body: unknown = raw;
+  if (typeof body === 'string') {
+    try {
+      body = JSON.parse(body) as unknown;
+    } catch {
+      return {};
+    }
+  }
+  if (!isRecord(body)) {
+    return {};
+  }
+
+  const targetUrl =
+    asString(body.targetUrl)?.trim() ??
+    asString(body.target)?.trim() ??
+    asString(body.url)?.trim();
+
+  let payload: unknown =
+    body.payload !== undefined
+      ? body.payload
+      : body.body !== undefined
+        ? body.body
+        : body.jsonrpc !== undefined
+          ? body
+          : undefined;
+
+  if (typeof payload === 'string') {
+    try {
+      payload = JSON.parse(payload) as unknown;
+    } catch {
+      // keep string — upstream may reject
+    }
+  }
+
+  const headers = isRecord(body.headers) ? body.headers : undefined;
+  const onionPacket = body.onionPacket;
+  const targetNodeIndex =
+    typeof body.targetNodeIndex === 'number' &&
+    Number.isFinite(body.targetNodeIndex)
+      ? body.targetNodeIndex
+      : undefined;
+
+  return { targetUrl, payload, headers, onionPacket, targetNodeIndex };
 }
 
 function extractMethodAndParams(body: unknown): {
@@ -246,23 +302,20 @@ app.post('/api/relay', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const body = req.body as {
-      targetUrl?: unknown;
-      payload?: unknown;
-      headers?: unknown;
-      onionPacket?: unknown;
-      targetNodeIndex?: number;
-    };
+    const body = normalizeRelayBody(req.body);
 
     // --- Preferred: explicit targetUrl + payload (frontend SnodePool) ---
-    const targetUrl = asString(body.targetUrl);
+    const targetUrl = body.targetUrl;
     if (targetUrl) {
       if (body.payload === undefined || body.payload === null) {
         res.status(400).json({ error: 'targetUrl e payload são obrigatórios' });
         return;
       }
       if (!validateTargetUrl(targetUrl)) {
-        res.status(400).json({ error: SSRF_BLOCKED_MESSAGE });
+        res.status(400).json({
+          error: SSRF_BLOCKED_MESSAGE,
+          targetUrl,
+        });
         return;
       }
 
@@ -275,13 +328,15 @@ app.post('/api/relay', async (req: Request, res: Response): Promise<void> => {
       );
 
       const upstreamHeaders: Record<string, string> = {};
-      if (isRecord(body.headers)) {
+      if (body.headers) {
         for (const key of [
           'X-Session-Timestamp',
           'X-Session-Signature',
           'X-Session-Pubkey',
         ] as const) {
-          const value = asString(body.headers[key]);
+          const value =
+            asString(body.headers[key]) ??
+            asString(body.headers[key.toLowerCase()]);
           if (value) {
             upstreamHeaders[key] = value;
           }
@@ -330,6 +385,16 @@ app.post('/api/relay', async (req: Request, res: Response): Promise<void> => {
       details: message,
     });
   }
+});
+
+/** Explicit method discovery for misconfigured clients / probes. */
+app.all('/api/relay', (req: Request, res: Response): void => {
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(204);
+    return;
+  }
+  res.setHeader('Allow', 'POST, OPTIONS');
+  res.status(405).json({ error: 'POST required on /api/relay' });
 });
 
 /**
