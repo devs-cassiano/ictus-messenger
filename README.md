@@ -167,7 +167,7 @@ Baseado em `i18next` + `react-i18next`, com detecção de idioma do navegador e 
 ## Estrutura do repositório (Monorepo)
 
 ```text
-session-messenger/
+ictus-messenger/
 ├── package.json           # workspaces + scripts unificados (dev, build, PM2, Docker)
 ├── package-lock.json      # lockfile único
 ├── Dockerfile             # build multi-stage → imagem alpine enxuta
@@ -198,7 +198,7 @@ session-messenger/
 
 ```bash
 git clone https://github.com/devs-cassiano/ictus-messenger.git
-cd session-messenger
+cd ictus-messenger
 ```
 
 ---
