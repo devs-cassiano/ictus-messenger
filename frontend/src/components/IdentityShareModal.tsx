@@ -101,7 +101,7 @@ export function IdentityShareModal({
       onClick={onClose}
     >
       <div
-        className="share-modal"
+        className="share-modal identity-share-modal"
         role="dialog"
         aria-modal="true"
         aria-label={t('share.aria')}
@@ -111,7 +111,7 @@ export function IdentityShareModal({
           <h2>{t('share.title')}</h2>
           <button
             type="button"
-            className="icon-btn"
+            className="icon-btn share-modal-close"
             aria-label={t('share.close')}
             onClick={onClose}
           >
@@ -119,9 +119,6 @@ export function IdentityShareModal({
           </button>
         </header>
 
-        <label className="share-label" htmlFor="session-hash">
-          {t('share.sessionId')}
-        </label>
         <div className="share-hash-row">
           <input
             id="session-hash"
@@ -129,6 +126,7 @@ export function IdentityShareModal({
             value={sessionId}
             readOnly
             spellCheck={false}
+            aria-label={t('share.sessionId')}
           />
           <button
             type="button"

@@ -224,8 +224,8 @@ export function DonationSupport() {
                   <QRCodeSVG
                     value={activeWallet.address}
                     size={qrSize}
-                    bgColor="#ffffff"
-                    fgColor="#0d1b1e"
+                    bgColor="#0d1b1e"
+                    fgColor="#2dd4bf"
                     level="M"
                     marginSize={2}
                     title={activeWallet.name}

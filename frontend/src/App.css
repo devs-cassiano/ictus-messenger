@@ -2156,6 +2156,35 @@ button.danger {
   text-transform: none;
 }
 
+/* Identity modal: centered title, close absolute on the end edge */
+.share-modal.identity-share-modal .share-modal-head {
+  position: relative;
+  justify-content: center;
+  width: 100%;
+  min-height: 2.5rem;
+  text-align: center;
+}
+
+.share-modal.identity-share-modal .share-modal-head h2 {
+  display: block;
+  width: 100%;
+  text-align: center;
+  padding-inline: 2.5rem;
+  box-sizing: border-box;
+}
+
+.share-modal.identity-share-modal .share-modal-close {
+  position: absolute;
+  inset-inline-end: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.share-modal.identity-share-modal .share-modal-close:hover:not(:disabled),
+.share-modal.identity-share-modal .share-modal-close:focus-visible {
+  transform: translateY(-50%);
+}
+
 .share-label {
   font-size: 0.72rem;
   letter-spacing: 0.1em;
@@ -2526,57 +2555,72 @@ button.danger {
   bottom: max(4rem, calc(var(--safe-bottom) + 3.5rem));
   top: auto;
   width: auto;
-  max-width: min(20rem, calc(100vw - 2rem));
+  max-width: min(18rem, calc(100vw - 2rem));
   margin-inline: auto;
-  padding: 0.85rem;
+  padding: 1rem 0.85rem;
   box-sizing: border-box;
   background: var(--bg-panel);
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: hidden;
   max-height: min(70dvh, 32rem);
 }
 
 .donation-step {
   min-width: 0;
   max-width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .donation-step-label {
   margin: 0 0 0.55rem;
+  padding: 0 0.15rem;
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--muted);
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .donation-coin-row {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-wrap: wrap;
-  gap: 0.55rem;
+  flex-wrap: nowrap;
+  gap: 0.45rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 0 0.1rem;
+  overflow: hidden;
 }
 
 .donation-coin {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.75rem;
-  height: 2.75rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  min-width: 2.5rem;
+  max-width: 2.5rem;
   padding: 0;
   border-radius: 999px;
   border: 1px solid var(--line);
   background: var(--bg-elevated);
   color: var(--muted);
   font-family: var(--mono);
-  font-size: 1.05rem;
+  font-size: 1rem;
   font-weight: 600;
   line-height: 1;
   cursor: pointer;
+  flex: 0 0 auto;
+  box-sizing: border-box;
   transition:
     color 0.15s ease,
     border-color 0.15s ease,
@@ -2613,8 +2657,10 @@ button.danger {
   text-align: center;
   margin-bottom: 0.65rem;
   min-width: 0;
-  min-height: 2.5rem;
-  padding-inline: 2.25rem;
+  min-height: 2.75rem;
+  padding-top: 0.15rem;
+  padding-inline: 2.1rem;
+  box-sizing: border-box;
 }
 
 .donation-back {
@@ -2623,10 +2669,10 @@ button.danger {
   top: 50%;
   transform: translateY(-50%);
   box-sizing: border-box;
-  width: 2rem;
-  height: 2rem;
-  min-width: 2rem;
-  min-height: 2rem;
+  width: 1.75rem;
+  height: 1.75rem;
+  min-width: 1.75rem;
+  min-height: 1.75rem;
   padding: 0;
   flex-shrink: 0;
   z-index: 1;
@@ -2654,6 +2700,11 @@ button.danger {
   background: #0a1214;
   border: 1px solid rgba(255, 255, 255, 0.3);
   transform: translateY(-50%);
+}
+
+.donation-back .ui-icon {
+  width: 14px;
+  height: 14px;
 }
 
 .donation-detail-titles {
@@ -2700,9 +2751,10 @@ button.danger {
   padding: 0.55rem;
   width: fit-content;
   max-width: 100%;
-  background: #ffffff;
+  background: #0d1b1e;
   border-radius: var(--radius-sm);
   border: 1px solid var(--line-soft);
+  box-sizing: border-box;
 }
 
 .donation-qr-wrap svg {
@@ -2782,16 +2834,16 @@ button.danger {
   .donation-popover {
     position: absolute;
     inset: auto;
-    left: 50%;
+    left: 0;
     right: auto;
     bottom: calc(100% + 0.75rem);
     top: auto;
-    width: 17.5rem;
-    max-width: min(20rem, calc(100vw - 1rem));
+    width: min(16.5rem, calc(100vw - 1.5rem));
+    max-width: min(16.5rem, calc(100vw - 1.5rem));
     margin-inline: 0;
     max-height: none;
-    overflow-y: visible;
-    transform: translateX(-50%);
+    overflow: hidden;
+    transform: none;
   }
 
   .sidebar.is-collapsed .donation-popover {
@@ -2800,7 +2852,8 @@ button.danger {
     bottom: auto;
     top: 50%;
     transform: translateY(-50%);
-    max-width: min(20rem, calc(100vw - var(--sidebar-collapsed-w) - 1.25rem));
+    width: min(16.5rem, calc(100vw - var(--sidebar-collapsed-w) - 1.25rem));
+    max-width: min(16.5rem, calc(100vw - var(--sidebar-collapsed-w) - 1.25rem));
   }
 }
 
@@ -2816,13 +2869,12 @@ button.danger {
   right: auto;
   bottom: auto;
   top: 50%;
-  width: 17.5rem;
-  max-width: min(20rem, calc(100vw - var(--sidebar-collapsed-w) - 1.25rem));
+  width: min(16.5rem, calc(100vw - var(--sidebar-collapsed-w) - 1.25rem));
+  max-width: min(16.5rem, calc(100vw - var(--sidebar-collapsed-w) - 1.25rem));
   margin: 0;
   transform: translateY(-50%);
   max-height: min(70dvh, 32rem);
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 [dir='rtl'] .sidebar.is-collapsed .donation-popover {
