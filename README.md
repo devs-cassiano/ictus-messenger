@@ -20,12 +20,6 @@ O repositório é um **monorepo** com **NPM Workspaces**: `frontend/` (React/Vit
 
 ---
 
-## Isenção de responsabilidade
-
-O Ictus Messenger é uma **iniciativa independente e de código aberto da comunidade**. **Não** possui afiliação, endosso ou vínculo oficial com a Session Technology Foundation, a Oxen ou os aplicativos oficiais Session para desktop/mobile. Session® e marcas relacionadas pertencem aos seus respectivos titulares. O uso é por sua conta e risco; revise a criptografia e o modelo de ameaças antes de confiar neste cliente para comunicações sensíveis.
-
----
-
 ## Sumário
 
 - [Arquitetura](#arquitetura)
