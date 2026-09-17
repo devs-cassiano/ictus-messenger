@@ -155,6 +155,13 @@
     "languageAria": "Selecionar idioma",
     "lock": "Bloquear / Sair"
   },
+  "donation": {
+    "support": "Apoiar o projeto",
+    "choose": "Escolha a moeda",
+    "back": "Voltar",
+    "copy": "Copiar",
+    "copied": "Copiado!"
+  },
   "errors": {
     "syncFail": "Falha ao sincronizar",
     "copySessionFail": "Não foi possível copiar o Session ID",

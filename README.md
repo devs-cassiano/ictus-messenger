@@ -379,6 +379,20 @@ Fluxo sugerido:
 
 ---
 
+## ☕ Apoie o Projeto / Donate
+
+O Ictus Messenger é um projeto **open-source independente**, focado em **privacidade estrita**, anonimato e modelo **zero-knowledge**. Se o projeto for útil para você, considere apoiá-lo com uma doação em criptomoeda — 100% voluntária e sem rastreadores.
+
+| Criptomoeda | Rede | Endereço da Carteira |
+| :--- | :--- | :--- |
+| **Bitcoin (BTC)** | Bitcoin Mainnet | `bc1qdmfeatvcd6w43d6ld7jda8ypw2dez224yul6fr` |
+| **Ethereum (ETH)** | Ethereum (ERC-20) | `0xFc99D8DEF31dB48EF05a01233e85547E47D18F9C` |
+| **Tether (USDT)** | **TRON (TRC-20)** | `TXMJdx8vGmAYhDUUwH1zKDoZP3j3DG5PDW` |
+
+> ⚠️ **Atenção:** Certifique-se de selecionar a **rede correta** ao realizar transferências, especialmente para **USDT (rede TRON / TRC-20)**, prevenindo a perda irreversível de fundos.
+
+---
+
 ## Licença
 
 Este projeto é destinado à distribuição open source sob a **Licença MIT** (veja [`LICENSE`](./LICENSE) quando presente no repositório). Alguns badges acima também referenciam **GPLv3** para ecossistemas que preferem *copyleft*; se houver política de licença dual, os arquivos `LICENSE` / `COPYING` são a fonte autoritativa.

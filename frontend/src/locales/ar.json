@@ -155,6 +155,13 @@
     "languageAria": "اختيار اللغة",
     "lock": "قفل / خروج"
   },
+  "donation": {
+    "support": "ادعم المشروع",
+    "choose": "اختر العملة",
+    "back": "رجوع",
+    "copy": "نسخ",
+    "copied": "تم النسخ!"
+  },
   "errors": {
     "syncFail": "فشلت المزامنة",
     "copySessionFail": "تعذر نسخ معرّف الجلسة",

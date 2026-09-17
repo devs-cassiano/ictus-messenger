@@ -12,6 +12,7 @@ import { resetNetworkSession, logEnvelopeDecryptResult } from './network/session
 import { sessionNetLog, truncateId } from './network/sessionNetLog';
 import { AuthLockPanel } from './components/AuthLockPanel';
 import { IdentityShareModal } from './components/IdentityShareModal';
+import { DonationSupport } from './components/DonationSupport';
 import { LanguageSelector } from './components/LanguageSelector';
 import { PinVaultModal } from './components/PinVaultModal';
 import { QrScannerModal } from './components/QrScannerModal';
@@ -1878,6 +1879,7 @@ export default function App() {
             >
               <IconUsersPlus size="nav" />
             </button>
+            <DonationSupport />
           </div>
         </div>
 

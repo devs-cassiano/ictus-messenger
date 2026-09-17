@@ -155,6 +155,13 @@
     "languageAria": "Select language",
     "lock": "Lock / Sign out"
   },
+  "donation": {
+    "support": "Support the project",
+    "choose": "Choose a currency",
+    "back": "Back",
+    "copy": "Copy",
+    "copied": "Copied!"
+  },
   "errors": {
     "syncFail": "Sync failed",
     "copySessionFail": "Could not copy Session ID",
