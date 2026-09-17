@@ -202,7 +202,6 @@ export function DonationSupport() {
                   <button
                     type="button"
                     className="icon-btn donation-back"
-                    title={t('donation.back')}
                     aria-label={t('donation.back')}
                     onClick={() => {
                       setSelected(null);

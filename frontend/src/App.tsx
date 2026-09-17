@@ -1879,7 +1879,6 @@ export default function App() {
             >
               <IconUsersPlus size="nav" />
             </button>
-            <DonationSupport />
           </div>
         </div>
 
@@ -2051,23 +2050,18 @@ export default function App() {
         </ul>
 
         <div className="sidebar-security">
+          <DonationSupport />
           <LanguageSelector />
           {canShowRecovery && (
             <button
               type="button"
-              className={
-                isSidebarCollapsed ? 'icon-btn' : 'ghost sidebar-recovery-btn'
-              }
+              className="icon-btn"
               title={t('auth.showRecoveryPhrase')}
               aria-label={t('auth.showRecoveryPhrase')}
               disabled={busy}
               onClick={() => setShowRecoveryPhrase(true)}
             >
-              {isSidebarCollapsed ? (
-                <IconEye size="nav" />
-              ) : (
-                t('auth.showRecoveryPhrase')
-              )}
+              <IconEye size="nav" />
             </button>
           )}
           <button

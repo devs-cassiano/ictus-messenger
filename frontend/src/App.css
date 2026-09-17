@@ -643,30 +643,40 @@ button.danger {
 
 .sidebar-security {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  justify-content: flex-end;
-  gap: 0.25rem;
+  justify-content: space-between;
+  gap: 0.35rem;
   padding: 0 0.15rem;
   margin-top: auto;
+  width: 100%;
+  min-width: 0;
 }
 
-.sidebar-recovery-btn {
-  flex: 1 1 100%;
-  order: -1;
-  margin-bottom: 0.15rem;
-  padding: 0.45rem 0.65rem;
-  font-size: 0.78rem;
-  text-align: start;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--line);
-  background: transparent;
-  color: var(--muted);
+.sidebar-security > * {
+  flex: 0 0 auto;
 }
 
-.sidebar-recovery-btn:hover:not(:disabled) {
-  color: var(--ink);
-  border-color: var(--line-soft);
+.sidebar-security .donation-support {
+  display: inline-flex;
+  align-items: center;
+}
+
+.sidebar-security .donation-trigger,
+.sidebar-security .icon-btn {
+  width: var(--touch);
+  height: var(--touch);
+  min-width: var(--touch);
+  min-height: var(--touch);
+}
+
+.sidebar-security .language-trigger {
+  height: var(--touch);
+  min-height: var(--touch);
+  min-width: var(--touch);
+  width: auto;
+  padding-inline: 0.35rem;
+  justify-content: center;
 }
 
 .panic-btn {
@@ -1722,8 +1732,7 @@ button.danger {
     gap: 0.75rem;
   }
 
-  .sidebar.is-collapsed .sidebar-actions .icon-btn,
-  .sidebar.is-collapsed .sidebar-actions .donation-support {
+  .sidebar.is-collapsed .sidebar-actions .icon-btn {
     display: inline-flex;
     margin-inline: auto;
   }
@@ -1760,11 +1769,20 @@ button.danger {
     gap: 0.75rem;
   }
 
-  .sidebar.is-collapsed .sidebar-security .icon-btn {
+  .sidebar.is-collapsed .sidebar-security .icon-btn,
+  .sidebar.is-collapsed .sidebar-security .donation-trigger,
+  .sidebar.is-collapsed .sidebar-security .language-trigger {
     width: var(--touch);
     height: var(--touch);
     min-width: var(--touch);
     min-height: var(--touch);
+    padding-inline: 0;
+  }
+
+  .sidebar.is-collapsed .sidebar-security .donation-support,
+  .sidebar.is-collapsed .sidebar-security .language-selector {
+    display: inline-flex;
+    margin-inline: auto;
   }
 
   .chat-pane {
@@ -1827,8 +1845,7 @@ button.danger {
     gap: 0.75rem;
   }
 
-  .sidebar.is-collapsed .sidebar-actions .icon-btn,
-  .sidebar.is-collapsed .sidebar-actions .donation-support {
+  .sidebar.is-collapsed .sidebar-actions .icon-btn {
     display: inline-flex;
     margin-inline: auto;
   }
@@ -1860,6 +1877,16 @@ button.danger {
     flex-direction: column;
     align-items: center;
     gap: 0.75rem;
+  }
+
+  .sidebar.is-collapsed .sidebar-security .icon-btn,
+  .sidebar.is-collapsed .sidebar-security .donation-trigger,
+  .sidebar.is-collapsed .sidebar-security .language-trigger {
+    width: var(--touch);
+    height: var(--touch);
+    min-width: var(--touch);
+    min-height: var(--touch);
+    padding-inline: 0;
   }
 }
 
@@ -2421,8 +2448,8 @@ button.danger {
   position: relative;
 }
 
-.sidebar.is-collapsed .sidebar-actions .icon-btn[title]:hover::after,
-.sidebar.is-collapsed .sidebar-actions .icon-btn[title]:focus-visible::after,
+.sidebar.is-collapsed .sidebar-actions .icon-btn:not(.donation-back)[title]:hover::after,
+.sidebar.is-collapsed .sidebar-actions .icon-btn:not(.donation-back)[title]:focus-visible::after,
 .sidebar.is-collapsed .sidebar-security .icon-btn[title]:hover::after,
 .sidebar.is-collapsed .sidebar-security .icon-btn[title]:focus-visible::after,
 .sidebar.is-collapsed .identity-card .icon-btn[title]:hover::after,
@@ -2455,8 +2482,8 @@ button.danger {
   content: none;
 }
 
-[dir='rtl'] .sidebar.is-collapsed .sidebar-actions .icon-btn[title]:hover::after,
-[dir='rtl'] .sidebar.is-collapsed .sidebar-actions .icon-btn[title]:focus-visible::after,
+[dir='rtl'] .sidebar.is-collapsed .sidebar-actions .icon-btn:not(.donation-back)[title]:hover::after,
+[dir='rtl'] .sidebar.is-collapsed .sidebar-actions .icon-btn:not(.donation-back)[title]:focus-visible::after,
 [dir='rtl'] .sidebar.is-collapsed .sidebar-security .icon-btn[title]:hover::after,
 [dir='rtl'] .sidebar.is-collapsed .sidebar-security .icon-btn[title]:focus-visible::after,
 [dir='rtl'] .sidebar.is-collapsed .identity-card .icon-btn[title]:hover::after,
@@ -2595,12 +2622,38 @@ button.danger {
   left: 0;
   top: 50%;
   transform: translateY(-50%);
+  box-sizing: border-box;
   width: 2rem;
   height: 2rem;
   min-width: 2rem;
   min-height: 2rem;
+  padding: 0;
   flex-shrink: 0;
   z-index: 1;
+  color: #f1f5f9;
+  background: #0a1214;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+  box-shadow: none;
+  filter: none;
+}
+
+.donation-back:hover:not(:disabled),
+.donation-back:focus-visible {
+  color: #ffffff;
+  background: #0a1214;
+  border: 1px solid rgba(255, 255, 255, 1);
+  border-color: rgba(255, 255, 255, 1);
+  transform: translateY(-50%);
+  box-shadow: none;
+  filter: none;
+}
+
+.donation-back.active {
+  color: #ffffff;
+  background: #0a1214;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transform: translateY(-50%);
 }
 
 .donation-detail-titles {
@@ -2789,6 +2842,12 @@ button.danger {
 [dir='rtl'] .donation-back {
   left: auto;
   right: 0;
+  transform: translateY(-50%);
+}
+
+[dir='rtl'] .donation-back:hover:not(:disabled),
+[dir='rtl'] .donation-back:focus-visible,
+[dir='rtl'] .donation-back.active {
   transform: translateY(-50%);
 }
 
